@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>GHQI - ITB Navigator 2026</title>
+<style>
+  :root {
+    --green: #1E3A2F;
+    --brass: #9A7B4F;
+    --ivory: #F7F5F0;
+    --orange: #E8792B;
+    --red: #C0392B;
+    --blue: #2980B9;
+    --light: #f0f0f0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--ivory);
+    color: #1a1a1a;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Header */
+  .header {
+    background: var(--green);
+    color: white;
+    padding: 16px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .header .sub {
+    font-size: 12px;
+    color: var(--brass);
+    margin-top: 2px;
+  }
+
+  /* Scorecard */
+  .scorecard {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    padding: 16px 20px;
+    background: white;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  .score-item {
+    text-align: center;
+    padding: 10px 6px;
+    border-radius: 10px;
+    background: var(--ivory);
+  }
+  .score-item .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #888;
+    margin-bottom: 4px;
+  }
+  .score-item .value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--green);
+  }
+  .score-item.total .value {
+    color: var(--orange);
+  }
+  .score-input {
+    width: 70px;
+    font-size: 28px;
+    font-weight: 800;
+    text-align: center;
+    border: none;
+    background: transparent;
+    color: var(--green);
+    -moz-appearance: textfield;
+  }
+  .score-input::-webkit-outer-spin-button,
+  .score-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    background: white;
+    border-bottom: 2px solid #e0e0e0;
+    position: sticky;
+    top: 58px;
+    z-index: 99;
+  }
+  .tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #999;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab.active {
+    color: var(--green);
+    border-bottom-color: var(--brass);
+  }
+
+  /* Map */
+  .map-section {
+    padding: 12px;
+    display: none;
+  }
+  .map-section.active { display: block; }
+  .map-container {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    background: white;
+  }
+  .map-container img {
+    width: 100%;
+    display: block;
+  }
+  .map-hint {
+    text-align: center;
+    padding: 10px;
+    font-size: 12px;
+    color: #999;
+  }
+  .pdf-link {
+    display: block;
+    text-align: center;
+    padding: 12px;
+    margin: 8px 12px;
+    background: var(--green);
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  /* Hall List */
+  .hall-list {
+    padding: 8px 12px 100px;
+    display: none;
+  }
+  .hall-list.active { display: block; }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--brass);
+    padding: 16px 8px 8px;
+  }
+
+  .hall-card {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    border-left: 4px solid var(--green);
+  }
+  .hall-card.alex { border-left-color: var(--blue); }
+  .hall-card.fabi { border-left-color: var(--orange); }
+  .hall-card.both { border-left-color: var(--brass); }
+  .hall-card.done { opacity: 0.5; }
+  .hall-card.done .hall-header { text-decoration: line-through; }
+
+  .hall-header {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    cursor: pointer;
+    gap: 12px;
+  }
+  .hall-check {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: 2px solid #ccc;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+  .hall-card.done .hall-check {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+  }
+  .hall-info { flex: 1; }
+  .hall-name {
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .hall-meta {
+    font-size: 12px;
+    color: #888;
+    margin-top: 2px;
+  }
+  .hall-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    color: white;
+    flex-shrink: 0;
+  }
+  .hall-badge.alex { background: var(--blue); }
+  .hall-badge.fabi { background: var(--orange); }
+  .hall-badge.both { background: var(--brass); }
+
+  .hall-count {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--green);
+    flex-shrink: 0;
+    min-width: 36px;
+    text-align: right;
+  }
+
+  .hall-details {
+    display: none;
+    padding: 0 16px 14px;
+    border-top: 1px solid #f0f0f0;
+  }
+  .hall-card.open .hall-details { display: block; }
+  .hall-card.open .hall-chevron { transform: rotate(180deg); }
+  .hall-chevron {
+    font-size: 12px;
+    color: #ccc;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+    border-bottom: 1px solid #f5f5f5;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { color: #888; }
+  .detail-value { font-weight: 600; }
+
+  .hall-link {
+    display: block;
+    text-align: center;
+    padding: 10px;
+    margin-top: 8px;
+    background: var(--ivory);
+    color: var(--green);
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  /* Target bar */
+  .target-bar {
+    padding: 12px 20px;
+    background: white;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  .target-progress {
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .target-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), var(--brass));
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+  .target-text {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+  }
+
+  /* Pitch card */
+  .pitch-card {
+    margin: 12px;
+    padding: 16px;
+    background: var(--green);
+    color: white;
+    border-radius: 12px;
+    display: none;
+  }
+  .pitch-card.active { display: block; }
+  .pitch-card h3 {
+    font-size: 13px;
+    color: var(--brass);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .pitch-card p {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>GHQI - ITB Navigator</h1>
+  <div class="sub">ITB Berlin 2026 | 3-5 Maerz | 1.671 Hotels</div>
+</div>
+
+<div class="scorecard">
+  <div class="score-item">
+    <div class="label">Alex</div>
+    <input type="number" class="score-input" id="scoreAlex" value="0" min="0" onchange="updateTotal()" style="color:var(--blue)">
+  </div>
+  <div class="score-item">
+    <div class="label">Fabi</div>
+    <input type="number" class="score-input" id="scoreFabi" value="0" min="0" onchange="updateTotal()" style="color:var(--orange)">
+  </div>
+  <div class="score-item total">
+    <div class="label">Gesamt</div>
+    <div class="value" id="scoreTotal">0</div>
+  </div>
+</div>
+
+<div class="target-bar">
+  <div class="target-progress"><div class="target-fill" id="targetFill" style="width:0%"></div></div>
+  <div class="target-text"><span id="targetPct">0%</span><span>Ziel: 500 Karten</span></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('halls')">Hallen</div>
+  <div class="tab" onclick="showTab('map')">Lageplan</div>
+  <div class="tab" onclick="showTab('pitch')">Pitch</div>
+</div>
+
+<!-- MAP TAB -->
+<div class="map-section" id="tab-map">
+  <div class="map-container">
+    <img src="https://static.event-cloud.com/2023_itb/uploads/41e1c950-5894-417d-9b00-6c784867c74f-5f7cf3da-df61-4658-bde4-6accbe7966d3" alt="ITB Berlin 2026 Gelaendeplan">
+  </div>
+  <div class="map-hint">Zum Zoomen mit zwei Fingern aufziehen</div>
+  <a class="pdf-link" href="https://messe-berlinprod-media.e-spirit.cloud/eb9073d7-d515-4782-a31b-1ef49560ea39/ITB/Downloads-Alle-Sprachen/Besuchen/Gelaendeplan/ITB-Berlin-2026_Gelaendeplan.pdf.pdf" target="_blank">PDF Gelaendeplan herunterladen</a>
+</div>
+
+<!-- PITCH TAB -->
+<div class="pitch-card" id="tab-pitch">
+  <h3>30-Sekunden Pitch</h3>
+  <p>"Wir machen Hotels KI-sichtbar. 5.000 strukturierte Datenpunkte, damit ChatGPT und Google AI Ihr Hotel direkt empfehlen - ohne OTA, ohne Provision. 369 Euro im Jahr. Darf ich Ihnen meine Karte dalassen?"</p>
+  <br>
+  <h3>English Version</h3>
+  <p>"We make hotels visible to AI. 5,000 structured data points so ChatGPT and Google AI recommend your hotel directly - no OTA, zero commission. 369 euros per year. May I leave you my card?"</p>
+  <br>
+  <h3>Key Facts</h3>
+  <p>- 369 EUR/Jahr. 0% Provision. Immer.<br>- 5.000 strukturierte Datenpunkte pro Hotel<br>- Digitaler Zwilling fuer KI-Systeme<br>- Hotels werden von ChatGPT, Perplexity, Google AI empfohlen<br>- Keine Abhaengigkeit von Booking.com & Co.</p>
+</div>
+
+<!-- HALLS TAB -->
+<div class="hall-list active" id="tab-halls">
+
+  <div class="section-title">Alex - Route Sued</div>
+
+  <div class="hall-card alex" data-hall="1.2" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 1.2</div>
+        <div class="hall-meta">Italien, Kroatien, Slowenien</div>
+      </div>
+      <div class="hall-badge alex">Alex</div>
+      <div class="hall-count">138</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">70 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Highlight</span><span class="detail-value">Stand 220 = Kroatien (24 Hotels!)</span></div>
+      <div class="detail-row"><span class="detail-label">Top-Laender</span><span class="detail-value">Italien 94, Kroatien 24, Slowenien</span></div>
+      <div class="detail-row"><span class="detail-label">Prioritaet</span><span class="detail-value">TIER 1 - Kernmarkt</span></div>
+      <a class="hall-link" href="https://navigate.itb.com/showfloor/organizations" target="_blank">Im ITB Navigator oeffnen</a>
+    </div>
+  </div>
+
+  <div class="hall-card alex" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 1.1</div>
+        <div class="hall-meta">Griechenland, Zypern, Malta</div>
+      </div>
+      <div class="hall-badge alex">Alex</div>
+      <div class="hall-count">127</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">60 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Highlight</span><span class="detail-value">Viele Independent-Hotels</span></div>
+      <div class="detail-row"><span class="detail-label">Top-Laender</span><span class="detail-value">Griechenland 51, Zypern 38</span></div>
+      <div class="detail-row"><span class="detail-label">Prioritaet</span><span class="detail-value">TIER 1 - Kernmarkt</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card alex" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 2.1</div>
+        <div class="hall-meta">Mittlerer Osten / Nordafrika</div>
+      </div>
+      <div class="hall-badge alex">Alex</div>
+      <div class="hall-count">54</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">25 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Prioritaet</span><span class="detail-value">TIER 2</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card alex" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 2.2</div>
+        <div class="hall-meta">UAE, Katar, Oman, Bahrain</div>
+      </div>
+      <div class="hall-badge alex">Alex</div>
+      <div class="hall-count">122</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">40 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Highlight</span><span class="detail-value">Premium-Segment, hohe Zahlungsbereitschaft</span></div>
+      <div class="detail-row"><span class="detail-label">Top-Laender</span><span class="detail-value">UAE 87, Katar 26, Oman 21</span></div>
+      <div class="detail-row"><span class="detail-label">Prioritaet</span><span class="detail-value">TIER 2 - Wachstum</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card alex" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 4.1</div>
+        <div class="hall-meta">Lateinamerika / Karibik</div>
+      </div>
+      <div class="hall-badge alex">Alex</div>
+      <div class="hall-count">16</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">10 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Prioritaet</span><span class="detail-value">TIER 3</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card alex" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 4.2</div>
+        <div class="hall-meta">Lateinamerika</div>
+      </div>
+      <div class="hall-badge alex">Alex</div>
+      <div class="hall-count">44</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">20 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Prioritaet</span><span class="detail-value">TIER 3</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card alex" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 22</div>
+        <div class="hall-meta">Karibik / weitere Destinationen</div>
+      </div>
+      <div class="hall-badge alex">Alex</div>
+      <div class="hall-count">91</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">25 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Prioritaet</span><span class="detail-value">TIER 3 - Wenn Zeit</span></div>
+    </div>
+  </div>
+
+  <div class="section-title">Fabi - Route Nord</div>
+
+  <div class="hall-card fabi" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 9</div>
+        <div class="hall-meta">Hotelketten (Accor, a&o etc.)</div>
+      </div>
+      <div class="hall-badge fabi">Fabi</div>
+      <div class="hall-count">22</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">15 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Highlight</span><span class="detail-value">Wenige Staende, GROSSE Fische - Zeit nehmen!</span></div>
+      <div class="detail-row"><span class="detail-label">Top-Namen</span><span class="detail-value">Accor Luxury & Lifestyle, a&o hostels</span></div>
+      <div class="detail-row"><span class="detail-label">Prioritaet</span><span class="detail-value">TIER 1 - Strategisch</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card fabi" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 18</div>
+        <div class="hall-meta">Skandinavien, Nordeuropa, Finnland</div>
+      </div>
+      <div class="hall-badge fabi">Fabi</div>
+      <div class="hall-count">98</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">50 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Highlight</span><span class="detail-value">Techaffin, englischsprachig</span></div>
+      <div class="detail-row"><span class="detail-label">Top-Laender</span><span class="detail-value">Finnland 24, Daenemark</span></div>
+      <div class="detail-row"><span class="detail-label">Prioritaet</span><span class="detail-value">TIER 1</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card fabi" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 3.2</div>
+        <div class="hall-meta">Tuerkei</div>
+      </div>
+      <div class="hall-badge fabi">Fabi</div>
+      <div class="hall-count">82</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">40 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Top-Laender</span><span class="detail-value">Tuerkei 75</span></div>
+      <div class="detail-row"><span class="detail-label">Prioritaet</span><span class="detail-value">TIER 1 - Riesiger Markt</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card fabi" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 3.1</div>
+        <div class="hall-meta">Tuerkei / oestliches Mittelmeer</div>
+      </div>
+      <div class="hall-badge fabi">Fabi</div>
+      <div class="hall-count">22</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">15 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Prioritaet</span><span class="detail-value">TIER 2 - Schnell mitnehmen</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card fabi" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 6.2</div>
+        <div class="hall-meta">Aegypten, Tansania, Afrika</div>
+      </div>
+      <div class="hall-badge fabi">Fabi</div>
+      <div class="hall-count">83</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">40 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Top-Laender</span><span class="detail-value">Aegypten 85, Tansania 47</span></div>
+      <div class="detail-row"><span class="detail-label">Prioritaet</span><span class="detail-value">TIER 2</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card fabi" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 20</div>
+        <div class="hall-meta">Mauritius, Suedafrika, diverse</div>
+      </div>
+      <div class="hall-badge fabi">Fabi</div>
+      <div class="hall-count">131</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">50 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Top-Laender</span><span class="detail-value">Mauritius 22, Suedafrika 25</span></div>
+      <div class="detail-row"><span class="detail-label">Prioritaet</span><span class="detail-value">TIER 2</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card fabi" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 21</div>
+        <div class="hall-meta">Diverse Destinationen</div>
+      </div>
+      <div class="hall-badge fabi">Fabi</div>
+      <div class="hall-count">84</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">30 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Prioritaet</span><span class="detail-value">TIER 2</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card fabi" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 11.2</div>
+        <div class="hall-meta">Osteuropa (Ungarn etc.)</div>
+      </div>
+      <div class="hall-badge fabi">Fabi</div>
+      <div class="hall-count">28</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">10 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Prioritaet</span><span class="detail-value">TIER 3 - Wenn Zeit</span></div>
+    </div>
+  </div>
+
+  <div class="section-title">Zusammen</div>
+
+  <div class="hall-card both" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 26</div>
+        <div class="hall-meta">Suedostasien (Thailand, Indonesien, Vietnam)</div>
+      </div>
+      <div class="hall-badge both">Beide</div>
+      <div class="hall-count">316</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">80 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Highlight</span><span class="detail-value">GROESSTE Halle - 316 Hotels!</span></div>
+      <div class="detail-row"><span class="detail-label">Top-Laender</span><span class="detail-value">Thailand 137, Indonesien 67, Vietnam 25, Malaysia 39</span></div>
+      <div class="detail-row"><span class="detail-label">Prioritaet</span><span class="detail-value">TIER 2 - Zusammen effizienter</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card both" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">hub27</div>
+        <div class="hall-meta">Innovation / Digital / Travel Tech</div>
+      </div>
+      <div class="hall-badge both">Beide</div>
+      <div class="hall-count">47</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">30 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Highlight</span><span class="detail-value">PMS-Anbieter + Tech-Partner suchen!</span></div>
+      <div class="detail-row"><span class="detail-label">Strategie</span><span class="detail-value">Integrationspartner > Einzelkunden</span></div>
+      <div class="detail-row"><span class="detail-label">Prioritaet</span><span class="detail-value">TIER 1 - STRATEGISCH</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card both" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 5.2</div>
+        <div class="hall-meta">Asien/Pazifik (Malediven, Sri Lanka, Indien)</div>
+      </div>
+      <div class="hall-badge both">Beide</div>
+      <div class="hall-count">132</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">40 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Top-Laender</span><span class="detail-value">Malediven 50, Sri Lanka 34, Indien 24</span></div>
+      <div class="detail-row"><span class="detail-label">Prioritaet</span><span class="detail-value">TIER 2</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card both" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 5.1</div>
+        <div class="hall-meta">Asien/Pazifik</div>
+      </div>
+      <div class="hall-badge both">Beide</div>
+      <div class="hall-count">5</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">5 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Prioritaet</span><span class="detail-value">TIER 3 - Schnell mitnehmen</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card both" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 23</div>
+        <div class="hall-meta">Diverse</div>
+      </div>
+      <div class="hall-badge both">Beide</div>
+      <div class="hall-count">13</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">10 Karten</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card both" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 25</div>
+        <div class="hall-meta">Diverse</div>
+      </div>
+      <div class="hall-badge both">Beide</div>
+      <div class="hall-count">7</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">5 Karten</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card both" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 8.1</div>
+        <div class="hall-meta">Adventure / Youth Travel</div>
+      </div>
+      <div class="hall-badge both">Beide</div>
+      <div class="hall-count">2</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">2 Karten</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card both" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 10.1</div>
+        <div class="hall-meta">Destinationen</div>
+      </div>
+      <div class="hall-badge both">Beide</div>
+      <div class="hall-count">5</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">3 Karten</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card both" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 7.2c</div>
+        <div class="hall-meta">Travel Technology</div>
+      </div>
+      <div class="hall-badge both">Beide</div>
+      <div class="hall-count">5</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">3 Karten</span></div>
+      <div class="detail-row"><span class="detail-label">Highlight</span><span class="detail-value">Travel Tech - PMS-Partner!</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card both" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Palais</div>
+        <div class="hall-meta">Premium / VIP</div>
+      </div>
+      <div class="hall-badge both">Beide</div>
+      <div class="hall-count">7</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">5 Karten</span></div>
+    </div>
+  </div>
+
+  <div class="hall-card both" onclick="toggleHall(this)">
+    <div class="hall-header">
+      <div class="hall-check"></div>
+      <div class="hall-info">
+        <div class="hall-name">Halle 6.1</div>
+        <div class="hall-meta">Afrika</div>
+      </div>
+      <div class="hall-badge both">Beide</div>
+      <div class="hall-count">3</div>
+      <div class="hall-chevron">&#9660;</div>
+    </div>
+    <div class="hall-details">
+      <div class="detail-row"><span class="detail-label">Karten-Ziel</span><span class="detail-value">2 Karten</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Save/Load state from localStorage
+  const STATE_KEY = 'ghqi_itb_2026';
+
+  function loadState() {
+    try {
+      const saved = localStorage.getItem(STATE_KEY);
+      if (saved) {
+        const state = JSON.parse(saved);
+        document.getElementById('scoreAlex').value = state.alex || 0;
+        document.getElementById('scoreFabi').value = state.fabi || 0;
+        (state.done || []).forEach(i => {
+          const cards = document.querySelectorAll('.hall-card');
+          if (cards[i]) cards[i].classList.add('done');
+        });
+        updateTotal();
+      }
+    } catch(e) {}
+  }
+
+  function saveState() {
+    const done = [];
+    document.querySelectorAll('.hall-card').forEach((c, i) => {
+      if (c.classList.contains('done')) done.push(i);
+    });
+    localStorage.setItem(STATE_KEY, JSON.stringify({
+      alex: parseInt(document.getElementById('scoreAlex').value) || 0,
+      fabi: parseInt(document.getElementById('scoreFabi').value) || 0,
+      done
+    }));
+  }
+
+  function updateTotal() {
+    const alex = parseInt(document.getElementById('scoreAlex').value) || 0;
+    const fabi = parseInt(document.getElementById('scoreFabi').value) || 0;
+    const total = alex + fabi;
+    document.getElementById('scoreTotal').textContent = total;
+    const pct = Math.min(100, Math.round((total / 500) * 100));
+    document.getElementById('targetFill').style.width = pct + '%';
+    document.getElementById('targetPct').textContent = pct + '%';
+    saveState();
+  }
+
+  function toggleHall(card) {
+    const wasOpen = card.classList.contains('open');
+    // Close all
+    document.querySelectorAll('.hall-card').forEach(c => c.classList.remove('open'));
+    if (!wasOpen) card.classList.toggle('open');
+  }
+
+  function showTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.hall-list, .map-section, .pitch-card').forEach(s => {
+      s.classList.remove('active');
+      s.style.display = 'none';
+    });
+    const el = document.getElementById('tab-' + tab);
+    if (el) {
+      el.style.display = 'block';
+      el.classList.add('active');
+    }
+    // Set active tab
+    const tabs = document.querySelectorAll('.tab');
+    if (tab === 'halls') tabs[0].classList.add('active');
+    if (tab === 'map') tabs[1].classList.add('active');
+    if (tab === 'pitch') tabs[2].classList.add('active');
+  }
+
+  // Double-tap to mark hall as done
+  let lastTap = 0;
+  document.querySelectorAll('.hall-check').forEach(check => {
+    check.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const card = this.closest('.hall-card');
+      card.classList.toggle('done');
+      this.innerHTML = card.classList.contains('done') ? '&#10003;' : '';
+      saveState();
+    });
+  });
+
+  // Init
+  loadState();
+  updateTotal();
+</script>
+
+</body>
+</html>
